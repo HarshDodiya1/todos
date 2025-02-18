@@ -62,7 +62,9 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           }
           return data;
         })
-        .then((templates) => setTemplates(Array.isArray(templates) ? templates : [templates]))
+        .then((templates) =>
+          setTemplates(Array.isArray(templates) ? templates : [templates])
+        )
         .catch((error) => {
           console.error("Failed to load templates:", error);
           toast.error("Failed to load templates");
@@ -108,18 +110,18 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             content,
             templateId,
-            date: format(selectedDate, "yyyy-MM-dd")
+            date: format(selectedDate, "yyyy-MM-dd"),
           }),
         });
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to add todo');
+          throw new Error(errorData.error || "Failed to add todo");
         }
 
         const newTodo = await response.json();
-        setTemplates(prev =>
-          prev.map(template =>
+        setTemplates((prev) =>
+          prev.map((template) =>
             template.id === templateId
               ? { ...template, todos: [...template.todos, newTodo] }
               : template
@@ -136,8 +138,8 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date().toISOString(),
           templateId,
         };
-        setTemplates(prev =>
-          prev.map(template =>
+        setTemplates((prev) =>
+          prev.map((template) =>
             template.id === templateId
               ? { ...template, todos: [...template.todos, newTodo] }
               : template
@@ -146,7 +148,9 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Add todo error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to add todo");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add todo"
+      );
     }
   };
 
@@ -162,12 +166,12 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      setTemplates(prev =>
-        prev.map(template =>
+      setTemplates((prev) =>
+        prev.map((template) =>
           template.id === templateId
             ? {
                 ...template,
-                todos: template.todos.filter(todo => todo.id !== id),
+                todos: template.todos.filter((todo) => todo.id !== id),
               }
             : template
         )
@@ -183,9 +187,16 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
   const updateTodo = (id: string, content: string, templateId: string) => {
     setTemplates((prev) =>
       prev.map((template) =>
-        template.id === templateId ? { ...template, todos: template.todos.map((todo) =>
-          todo.id === id ? { ...todo, content, updatedAt: new Date().toISOString() } : todo
-        ) } : template
+        template.id === templateId
+          ? {
+              ...template,
+              todos: template.todos.map((todo) =>
+                todo.id === id
+                  ? { ...todo, content, updatedAt: new Date().toISOString() }
+                  : todo
+              ),
+            }
+          : template
       )
     );
   };
@@ -194,8 +205,8 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     try {
       if (status === "authenticated" && session?.user?.id) {
         const todo = templates
-          .find(t => t.id === templateId)
-          ?.todos.find(t => t.id === id);
+          .find((t) => t.id === templateId)
+          ?.todos.find((t) => t.id === id);
 
         if (!todo) return;
 
@@ -204,7 +215,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id,
-            completed: !todo.completed
+            completed: !todo.completed,
           }),
         });
 
@@ -213,12 +224,12 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
         }
 
         const updatedTodo = await response.json();
-        setTemplates(prev =>
-          prev.map(template =>
+        setTemplates((prev) =>
+          prev.map((template) =>
             template.id === templateId
               ? {
                   ...template,
-                  todos: template.todos.map(t =>
+                  todos: template.todos.map((t) =>
                     t.id === id ? updatedTodo : t
                   ),
                 }
@@ -226,12 +237,12 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           )
         );
       } else {
-        setTemplates(prev =>
-          prev.map(template =>
+        setTemplates((prev) =>
+          prev.map((template) =>
             template.id === templateId
               ? {
                   ...template,
-                  todos: template.todos.map(t =>
+                  todos: template.todos.map((t) =>
                     t.id === id ? { ...t, completed: !t.completed } : t
                   ),
                 }
@@ -260,7 +271,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name: `Template ${templates.length + 1}`
+            name: `Template ${templates.length + 1}`,
           }),
         });
 
@@ -270,7 +281,9 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
         }
 
         const newTemplate = await response.json();
-        setTemplates(prev => prev.map(t => ({ ...t, isActive: false })).concat(newTemplate));
+        setTemplates((prev) =>
+          prev.map((t) => ({ ...t, isActive: false })).concat(newTemplate)
+        );
       } else {
         // Local storage fallback
         const newTemplate: Template = {
@@ -279,13 +292,17 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           date: format(selectedDate, "yyyy-MM-dd"),
           newTodo: "",
           todos: [],
-          isActive: true
+          isActive: true,
         };
-        setTemplates(prev => prev.map(t => ({ ...t, isActive: false })).concat(newTemplate));
+        setTemplates((prev) =>
+          prev.map((t) => ({ ...t, isActive: false })).concat(newTemplate)
+        );
       }
     } catch (error) {
       console.error("Add template error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to add template");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add template"
+      );
     }
   };
 
@@ -304,7 +321,10 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
       setTemplates((prev) => {
         const filtered = prev.filter((template) => template.id !== templateId);
         // If we're deleting the active template, make the first remaining template active
-        if (filtered.length > 0 && prev.find(t => t.id === templateId)?.isActive) {
+        if (
+          filtered.length > 0 &&
+          prev.find((t) => t.id === templateId)?.isActive
+        ) {
           filtered[0].isActive = true;
         }
         return filtered;
@@ -341,14 +361,16 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
         }
 
         const updatedTemplate = await response.json();
-        setTemplates(prev =>
-          prev.map(template =>
-            template.id === templateId ? { ...template, ...updatedTemplate } : template
+        setTemplates((prev) =>
+          prev.map((template) =>
+            template.id === templateId
+              ? { ...template, ...updatedTemplate }
+              : template
           )
         );
       } else {
-        setTemplates(prev =>
-          prev.map(template =>
+        setTemplates((prev) =>
+          prev.map((template) =>
             template.id === templateId ? { ...template, name } : template
           )
         );
@@ -360,16 +382,16 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setActiveTemplate = (templateId: string) => {
-    setTemplates(prev =>
-      prev.map(template =>
-        template.id === templateId 
+    setTemplates((prev) =>
+      prev.map((template) =>
+        template.id === templateId
           ? { ...template, isActive: true }
           : { ...template, isActive: false }
       )
     );
   };
 
-  const activeTemplate = templates.find(t => t.isActive);
+  const activeTemplate = templates.find((t) => t.isActive);
 
   return (
     <TodoContext.Provider
