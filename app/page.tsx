@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { TodoList } from "@/components/todo-list";
 import { KeyBindingsDialog } from "@/components/key-bindings-dialog";
-import { Input } from "@/components/ui/input";
-import { useTodo } from "@/lib/todo-context";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { KeyboardIcon, Plus, Trash2 } from "lucide-react";
+import { TodoList } from "@/components/todo-list";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,9 +21,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserMenu } from "@/components/user-menu";
+import { useTodo } from "@/lib/todo-context";
+import { Template } from "@/lib/types";
+import { motion } from "framer-motion";
+import {
+  Edit2,
+  KeyboardIcon,
+  MoreVertical,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Home() {
-  const [newTodo, setNewTodo] = useState("");
   const [showKeyBindings, setShowKeyBindings] = useState(false);
   const {
     selectedDate,
@@ -39,6 +53,8 @@ export default function Home() {
     setActiveTemplate,
     activeTemplate,
   } = useTodo();
+  const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
+  const [tempTemplateName, setTempTemplateName] = useState("");
 
   const handleTemplateKeyDown = (
     e: React.KeyboardEvent,
@@ -51,6 +67,18 @@ export default function Home() {
         updateTemplateInput(template.id, "");
         toast.success("Todo added successfully!");
       }
+    }
+  };
+
+  const handleEditTemplate = (template: Template) => {
+    setEditingTemplate(template.id);
+    setTempTemplateName(template.name);
+  };
+
+  const handleSaveTemplateName = async (templateId: string) => {
+    if (tempTemplateName.trim()) {
+      await updateTemplateName(templateId, tempTemplateName.trim());
+      setEditingTemplate(null);
     }
   };
 
@@ -129,7 +157,7 @@ export default function Home() {
         </div>
       </div>
 
-      <motion.div 
+      <motion.div
         className="grid gap-8 md:grid-cols-[350px_1fr]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -138,7 +166,9 @@ export default function Home() {
         <div className="h-fit">
           <Card className="border-2 shadow-sm hover:shadow-md transition-shadow duration-200">
             <CardHeader>
-              <CardTitle className="text-lg font-medium tracking-tight">Calendar</CardTitle>
+              <CardTitle className="text-lg font-medium tracking-tight">
+                Calendar
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Calendar
@@ -155,7 +185,9 @@ export default function Home() {
           <CardHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <CardTitle className="text-lg font-medium tracking-tight">Tasks</CardTitle>
+                <CardTitle className="text-lg font-medium tracking-tight">
+                  Tasks
+                </CardTitle>
                 <Select
                   value={activeTemplate?.id}
                   onValueChange={(value) => setActiveTemplate(value)}
@@ -165,7 +197,7 @@ export default function Home() {
                   </SelectTrigger>
                   <SelectContent className="shadow-lg border-2">
                     {templates.map((template) => (
-                      <SelectItem 
+                      <SelectItem
                         key={template.id}
                         value={template.id}
                         className="cursor-pointer transition-colors hover:bg-primary/5"
@@ -187,46 +219,96 @@ export default function Home() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6 p-6">
-            {templates.filter(t => t.isActive).map((template) => (
-              <div
-                key={template.id}
-                className="space-y-4 p-6 border-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-center justify-between">
-                  <Input
-                    value={template.name}
-                    onChange={(e) => updateTemplateName(template.id, e.target.value)}
-                    className="w-[200px] text-lg font-medium"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeTemplate(template.id)}
-                    className="text-destructive hover:text-destructive/90"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+            {templates
+              .filter((t) => t.isActive)
+              .map((template) => (
+                <div
+                  key={template.id}
+                  className="space-y-4 p-6 border-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1">
+                      {editingTemplate === template.id ? (
+                        <div className="flex items-center gap-2 w-full max-w-[300px]">
+                          <Input
+                            value={tempTemplateName}
+                            onChange={(e) =>
+                              setTempTemplateName(e.target.value)
+                            }
+                            className="text-lg font-medium"
+                            placeholder="Template name"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleSaveTemplateName(template.id);
+                              } else if (e.key === "Escape") {
+                                setEditingTemplate(null);
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => handleSaveTemplateName(template.id)}
+                          >
+                            <Save className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <h3 className="text-lg font-medium">{template.name}</h3>
+                      )}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => handleEditTemplate(template)}
+                        >
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => {
+                            if (
+                              confirm(
+                                "Are you sure you want to delete this template?"
+                              )
+                            ) {
+                              removeTemplate(template.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add a new todo..."
+                      value={template.newTodo}
+                      onChange={(e) =>
+                        updateTemplateInput(template.id, e.target.value)
+                      }
+                      className="flex-1"
+                      onKeyDown={(e) => handleTemplateKeyDown(e, template)}
+                    />
+                    <Button
+                      onClick={() => addTodo(template.newTodo, template.id)}
+                      size="icon"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <TodoList templateId={template.id} />
                 </div>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add a new todo..."
-                    value={template.newTodo}
-                    onChange={(e) =>
-                      updateTemplateInput(template.id, e.target.value)
-                    }
-                    className="flex-1"
-                    onKeyDown={(e) => handleTemplateKeyDown(e, template)}
-                  />
-                  <Button
-                    onClick={() => addTodo(template.newTodo, template.id)}
-                    size="icon"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <TodoList templateId={template.id} />
-              </div>
-            ))}
+              ))}
           </CardContent>
         </Card>
       </motion.div>

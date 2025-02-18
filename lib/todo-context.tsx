@@ -150,13 +150,34 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const deleteTodo = (id: string, templateId: string) => {
-    setTemplates((prev) =>
-      prev.map((template) =>
-        template.id === templateId ? { ...template, todos: template.todos.filter((todo) => todo.id !== id) } : template
-      )
-    );
-    setSelectedTodo(null);
+  const deleteTodo = async (id: string, templateId: string) => {
+    try {
+      if (status === "authenticated" && session?.user?.id) {
+        const response = await fetch(`/api/todos/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete todo");
+        }
+      }
+
+      setTemplates(prev =>
+        prev.map(template =>
+          template.id === templateId
+            ? {
+                ...template,
+                todos: template.todos.filter(todo => todo.id !== id),
+              }
+            : template
+        )
+      );
+      setSelectedTodo(null);
+      toast.success("Todo deleted successfully!");
+    } catch (error) {
+      console.error("Delete todo error:", error);
+      toast.error("Failed to delete todo");
+    }
   };
 
   const updateTodo = (id: string, content: string, templateId: string) => {
@@ -169,14 +190,59 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const toggleTodo = (id: string, templateId: string) => {
-    setTemplates((prev) =>
-      prev.map((template) =>
-        template.id === templateId ? { ...template, todos: template.todos.map((todo) =>
-          todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        ) } : template
-      )
-    );
+  const toggleTodo = async (id: string, templateId: string) => {
+    try {
+      if (status === "authenticated" && session?.user?.id) {
+        const todo = templates
+          .find(t => t.id === templateId)
+          ?.todos.find(t => t.id === id);
+
+        if (!todo) return;
+
+        const response = await fetch("/api/todos", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            completed: !todo.completed
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update todo");
+        }
+
+        const updatedTodo = await response.json();
+        setTemplates(prev =>
+          prev.map(template =>
+            template.id === templateId
+              ? {
+                  ...template,
+                  todos: template.todos.map(t =>
+                    t.id === id ? updatedTodo : t
+                  ),
+                }
+              : template
+          )
+        );
+      } else {
+        setTemplates(prev =>
+          prev.map(template =>
+            template.id === templateId
+              ? {
+                  ...template,
+                  todos: template.todos.map(t =>
+                    t.id === id ? { ...t, completed: !t.completed } : t
+                  ),
+                }
+              : template
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Toggle todo error:", error);
+      toast.error("Failed to update todo");
+    }
   };
 
   const reorderTodos = (newOrder: Todo[], templateId: string) => {
@@ -223,8 +289,31 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const removeTemplate = (templateId: string) => {
-    setTemplates((prev) => prev.filter((template) => template.id !== templateId));
+  const removeTemplate = async (templateId: string) => {
+    try {
+      if (status === "authenticated" && session?.user?.id) {
+        const response = await fetch(`/api/templates/${templateId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete template");
+        }
+      }
+
+      setTemplates((prev) => {
+        const filtered = prev.filter((template) => template.id !== templateId);
+        // If we're deleting the active template, make the first remaining template active
+        if (filtered.length > 0 && prev.find(t => t.id === templateId)?.isActive) {
+          filtered[0].isActive = true;
+        }
+        return filtered;
+      });
+      toast.success("Template deleted successfully!");
+    } catch (error) {
+      console.error("Delete template error:", error);
+      toast.error("Failed to delete template");
+    }
   };
 
   const updateTemplateInput = (templateId: string, value: string) => {
@@ -235,12 +324,39 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const updateTemplateName = (templateId: string, name: string) => {
-    setTemplates(prev =>
-      prev.map(template =>
-        template.id === templateId ? { ...template, name } : template
-      )
-    );
+  const updateTemplateName = async (templateId: string, name: string) => {
+    try {
+      if (status === "authenticated" && session?.user?.id) {
+        const response = await fetch("/api/templates", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: templateId,
+            name,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update template");
+        }
+
+        const updatedTemplate = await response.json();
+        setTemplates(prev =>
+          prev.map(template =>
+            template.id === templateId ? { ...template, ...updatedTemplate } : template
+          )
+        );
+      } else {
+        setTemplates(prev =>
+          prev.map(template =>
+            template.id === templateId ? { ...template, name } : template
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Update template error:", error);
+      toast.error("Failed to update template");
+    }
   };
 
   const setActiveTemplate = (templateId: string) => {
