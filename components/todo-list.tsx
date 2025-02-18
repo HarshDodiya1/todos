@@ -45,8 +45,8 @@ function SortableTodoItem({ todo, index, isSelected, templateId }: {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 1 : 0,
+    transition: transition,
+    zIndex: isDragging ? 100 : 1,
   };
 
   useEffect(() => {
@@ -60,14 +60,24 @@ function SortableTodoItem({ todo, index, isSelected, templateId }: {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className={`group flex items-center gap-3 rounded-lg border-2 p-4 hover:border-primary/50 transition-all duration-200 outline-none shadow-sm hover:shadow-md ${
-        selectedTodo?.id === todo.id
-          ? "border-primary bg-primary/5"
-          : "border-border"
-      }`}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        scale: isDragging ? 1.02 : 1,
+        boxShadow: isDragging 
+          ? "0 8px 20px -4px rgba(0, 0, 0, 0.1)" 
+          : "0 2px 4px -2px rgba(0, 0, 0, 0.05)",
+      }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className={`group flex items-center gap-3 rounded-lg border-2 p-4
+        ${isDragging 
+          ? "border-primary/50 bg-background cursor-grabbing shadow-lg" 
+          : "hover:border-primary/50 border-border cursor-default shadow-sm hover:shadow-md"
+        }
+        ${selectedTodo?.id === todo.id ? "border-primary bg-primary/5" : ""}
+        transition-all duration-200 ease-in-out outline-none`}
       tabIndex={0}
       role="listitem"
       aria-selected={isSelected}
@@ -92,8 +102,14 @@ function SortableTodoItem({ todo, index, isSelected, templateId }: {
       }}
       onFocus={() => setSelectedTodo(todo)}
     >
-      <div {...listeners} className="cursor-grab hover:text-primary transition-colors">
-        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      <div 
+        {...listeners} 
+        className={`
+          ${isDragging ? "cursor-grabbing" : "cursor-grab"} 
+          p-1 -m-1 rounded hover:bg-primary/5 transition-colors
+        `}
+      >
+        <GripVertical className={`h-5 w-5 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
       </div>
       <Checkbox
         checked={todo.completed}
@@ -101,9 +117,8 @@ function SortableTodoItem({ todo, index, isSelected, templateId }: {
         className="transition-all duration-200 hover:scale-110"
       />
       <div
-        className={`flex-1 cursor-pointer transition-colors hover:text-primary ${
-          todo.completed ? "text-muted-foreground line-through" : ""
-        }`}
+        className={`flex-1 cursor-pointer transition-colors hover:text-primary 
+          ${todo.completed ? "text-muted-foreground line-through" : ""}`}
       >
         {todo.content}
       </div>
@@ -126,9 +141,10 @@ interface TodoListProps {
 export function TodoList({ templateId }: TodoListProps) {
   const { templates, selectedDate, reorderTodos, selectedTodo } = useTodo();
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required to start drag
+      },
     })
   );
 
@@ -139,12 +155,13 @@ export function TodoList({ templateId }: TodoListProps) {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = filteredTodos.findIndex((t) => t.id === active.id);
-      const newIndex = filteredTodos.findIndex((t) => t.id === over.id);
-      const newTodos = arrayMove(filteredTodos, oldIndex, newIndex);
-      reorderTodos(newTodos, templateId);
-    }
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = filteredTodos.findIndex((t) => t.id === active.id);
+    const newIndex = filteredTodos.findIndex((t) => t.id === over.id);
+
+    const newTodos = arrayMove(filteredTodos, oldIndex, newIndex);
+    reorderTodos(newTodos, templateId);
   };
 
   return (

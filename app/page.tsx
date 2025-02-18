@@ -102,15 +102,17 @@ export default function Home() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="container mx-auto max-w-5xl py-8 px-4"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="container mx-auto max-w-5xl py-12 px-4"
     >
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-12 flex items-center justify-between">
         <motion.h1
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent"
+          transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+          className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"
         >
           Todo App
         </motion.h1>
@@ -127,11 +129,16 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-[350px_1fr]">
+      <motion.div 
+        className="grid gap-8 md:grid-cols-[350px_1fr]"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+      >
         <div className="h-fit">
-          <Card className="border-2">
+          <Card className="border-2 shadow-sm hover:shadow-md transition-shadow duration-200">
             <CardHeader>
-              <CardTitle className="text-lg font-medium">Calendar</CardTitle>
+              <CardTitle className="text-lg font-medium tracking-tight">Calendar</CardTitle>
             </CardHeader>
             <CardContent>
               <Calendar
@@ -144,23 +151,24 @@ export default function Home() {
           </Card>
         </div>
 
-        <Card className="border-2 max-h-[calc(100vh-12rem)] overflow-auto">
-          <CardHeader className="sticky top-0 bg-background z-10 border-b">
+        <Card className="border-2 max-h-[calc(100vh-12rem)] overflow-auto shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <CardTitle className="text-lg font-medium">Tasks</CardTitle>
+                <CardTitle className="text-lg font-medium tracking-tight">Tasks</CardTitle>
                 <Select
                   value={activeTemplate?.id}
                   onValueChange={(value) => setActiveTemplate(value)}
                 >
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-[200px] transition-all duration-200 hover:border-primary/50">
                     <SelectValue placeholder="Select template" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="shadow-lg border-2">
                     {templates.map((template) => (
                       <SelectItem 
                         key={template.id}
                         value={template.id}
+                        className="cursor-pointer transition-colors hover:bg-primary/5"
                       >
                         {template.name}
                       </SelectItem>
@@ -171,18 +179,18 @@ export default function Home() {
               <Button
                 variant="outline"
                 onClick={() => addTemplate()}
-                className="text-sm"
+                className="text-sm hover:border-primary/50 transition-all duration-200"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 New Template
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 p-4">
+          <CardContent className="space-y-6 p-6">
             {templates.filter(t => t.isActive).map((template) => (
               <div
                 key={template.id}
-                className="space-y-4 p-4 border rounded-lg"
+                className="space-y-4 p-6 border-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <div className="flex items-center justify-between">
                   <Input
@@ -221,7 +229,7 @@ export default function Home() {
             ))}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
       <KeyBindingsDialog
         open={showKeyBindings}

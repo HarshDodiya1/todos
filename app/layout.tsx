@@ -1,7 +1,8 @@
-import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Providers } from "./providers";
+import { GeistSans } from 'geist/font/sans';
+import "@/app/globals.css";
+import { Providers } from "@/app/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={GeistSans.className}>
         <Providers>{children}</Providers>
       </body>
     </html>
