@@ -1,30 +1,28 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTodo } from "@/lib/todo-context";
 import { Todo } from "@/lib/types";
 import {
   closestCenter,
   DndContext,
-  KeyboardSensor,
+  DragEndEvent,
   PointerSensor,
   useSensor,
-  useSensors,
-  DragEndEvent,
+  useSensors
 } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { GripVertical, Trash2 } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
 
 function SortableTodoItem({ todo, index, isSelected, templateId }: { 
   todo: Todo; 
