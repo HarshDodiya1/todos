@@ -21,10 +21,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={GeistSans.className}>
-        <Providers>{children}</Providers>
-        <footer className="fixed bottom-0 w-full py-4 text-center bg-gradient-to-t from-background/80 to-transparent backdrop-blur-sm">
-          <div className="flex items-center justify-center gap-4">
+      <body className={`${GeistSans.className} min-h-screen flex flex-col`}>
+        <main className="flex-1 pb-4">
+          <Providers>{children}</Providers>
+        </main>
+        <footer className="w-full py-4 bg-gradient-to-t from-background/80 to-transparent backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
             <p className="text-sm text-muted-foreground">Created by Harsh</p>
             <div className="flex gap-3">
               <a
