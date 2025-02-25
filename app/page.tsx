@@ -1,5 +1,5 @@
 "use client";
-
+import logo from "../app/public/icon.png";
 import { KeyBindingsDialog } from "@/components/key-bindings-dialog";
 import { TodoList } from "@/components/todo-list";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import {
   Save,
   Trash2,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -136,14 +137,25 @@ export default function Home() {
       className="container mx-auto max-w-5xl py-6 sm:py-12 px-4"
     >
       <div className="mb-8 sm:mb-12 flex items-center justify-between">
-        <motion.h1
+        <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
-          className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"
+          className="flex items-center gap-3"
         >
-          Todo App
-        </motion.h1>
+          <Image
+            src={logo}
+            alt="Todo App Logo"
+            width={40}
+            height={40}
+            className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
+          />
+          <div className="flex flex-col">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              Todo App
+            </h1>
+          </div>
+        </motion.div>
         <div className="flex items-center gap-2 sm:gap-4">
           <Button
             variant="outline"
@@ -156,7 +168,6 @@ export default function Home() {
           <UserMenu />
         </div>
       </div>
-
       <motion.div
         className="grid gap-4 sm:gap-8 grid-cols-1 md:grid-cols-[350px_1fr]"
         initial={{ opacity: 0, y: 20 }}
@@ -193,7 +204,10 @@ export default function Home() {
                   onValueChange={(value) => setActiveTemplate(value)}
                 >
                   <SelectTrigger className="w-full transition-all duration-200 hover:border-primary/50 text-sm">
-                    <SelectValue placeholder="Select template" className="truncate" />
+                    <SelectValue
+                      placeholder="Select template"
+                      className="truncate"
+                    />
                   </SelectTrigger>
                   <SelectContent className="shadow-lg border-2 w-[280px]">
                     {templates.map((template) => (
@@ -232,7 +246,9 @@ export default function Home() {
                         <div className="flex items-center gap-2 w-full min-w-0">
                           <Input
                             value={tempTemplateName}
-                            onChange={(e) => setTempTemplateName(e.target.value)}
+                            onChange={(e) =>
+                              setTempTemplateName(e.target.value)
+                            }
                             className="text-base sm:text-lg font-medium min-w-0"
                             placeholder="Template name"
                             autoFocus
@@ -314,7 +330,6 @@ export default function Home() {
           </CardContent>
         </Card>
       </motion.div>
-
       <KeyBindingsDialog
         open={showKeyBindings}
         onOpenChange={setShowKeyBindings}
