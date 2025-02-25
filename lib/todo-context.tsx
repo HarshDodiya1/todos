@@ -30,16 +30,16 @@ const TodoContext = createContext<TodoContextType | undefined>(undefined);
 export function TodoProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [hasShownAuthWarning, setHasShownAuthWarning] = useState(false);
-
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  });
+  
   useEffect(() => {
     if (status === "unauthenticated" && !hasShownAuthWarning) {
-      toast.warning(
-        "Sign in to save your todos! Without signing in, your todos will be lost when you close the browser.",
-        { duration: 6000 }
-      );
+      toast.warning("Sign in to save your todos!", { duration: 6000 });
       setHasShownAuthWarning(true);
     }
   }, [status, hasShownAuthWarning]);
@@ -62,9 +62,15 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           }
           return data;
         })
-        .then((templates) =>
-          setTemplates(Array.isArray(templates) ? templates : [templates])
-        )
+        .then((templates) => {
+          const templatesArray = Array.isArray(templates) ? templates : [templates];
+          // Ensure at least one template is active
+          const hasActiveTemplate = templatesArray.some(t => t.isActive);
+          if (!hasActiveTemplate && templatesArray.length > 0) {
+            templatesArray[0].isActive = true;
+          }
+          setTemplates(templatesArray);
+        })
         .catch((error) => {
           console.error("Failed to load templates:", error);
           toast.error("Failed to load templates");
@@ -72,7 +78,12 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     } else if (status === "unauthenticated") {
       const savedTemplates = localStorage.getItem("todoTemplates");
       if (savedTemplates) {
-        setTemplates(JSON.parse(savedTemplates));
+        const parsedTemplates = JSON.parse(savedTemplates);
+        const hasActiveTemplate = parsedTemplates.some((t: { isActive: any; }) => t.isActive);
+        if (!hasActiveTemplate && parsedTemplates.length > 0) {
+          parsedTemplates[0].isActive = true;
+        }
+        setTemplates(parsedTemplates);
       } else {
         const initialTemplate: Template = {
           id: crypto.randomUUID(),
@@ -93,12 +104,20 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     }
   }, [templates, status]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      if (selectedDate.getDate() !== now.getDate()) {
+        setSelectedDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+      }
+    }, 120000); // Check every 2 minutes
+
+    return () => clearInterval(timer);
+  }, [selectedDate]);
+
   const addTodo = async (content: string, templateId: string) => {
     if (status === "unauthenticated" && !hasShownAuthWarning) {
-      toast.warning(
-        "Sign in to save your todos! Without signing in, your todos will be lost when you close the browser.",
-        { duration: 6000 }
-      );
+      toast.warning("Sign in to save your todos!", { duration: 6000 });
       setHasShownAuthWarning(true);
     }
 
@@ -127,7 +146,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
               : template
           )
         );
-        toast.success("Todo added successfully!");
+        // toast.success("Todo added successfully!");
       } else {
         // Fallback to local storage
         const newTodo = {
@@ -177,7 +196,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
         )
       );
       setSelectedTodo(null);
-      toast.success("Todo deleted successfully!");
+      // toast.success("Todo deleted successfully!");
     } catch (error) {
       console.error("Delete todo error:", error);
       toast.error("Failed to delete todo");
